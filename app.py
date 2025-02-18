@@ -19,7 +19,7 @@ cloudinary.config(
     api_secret=os.getenv("CLOUDINARY_API_SECRET")
 )
 
-COLLECTIONS = ["publications", "projects", "datasets", "resources", "people", "alumni", "news"]
+COLLECTIONS = ["publications", "projects", "datasets", "resources", "people", "alumni", "news","indication"]
 
 @app.route('/add_item', methods=['POST'])
 def add_item():
@@ -109,6 +109,81 @@ def upload_image():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+@app.route('/update_lab', methods=['POST'])
+def update_lab():
+    try:
+        # Get doc_id (Hardcoded for now)
+        doc_id = "1AjL70oGnfZvxaEX7wx3"
+
+        # Get new boolean value from request
+        data = request.get_json()
+        new_value = data.get("value")  # Expected: true/false
+
+        if new_value is None:
+            return jsonify({"error": "Missing 'value' parameter"}), 400
+
+        # Get the document reference
+        doc_ref = db.collection("indication").document(doc_id)
+        doc = doc_ref.get()
+
+        if not doc.exists:
+            return jsonify({"error": f"Document with ID '{doc_id}' not found"}), 404
+
+        # Get document data
+        doc_data = doc.to_dict()
+
+        # Update only boolean fields
+        updated_fields = {keys: new_value for keys, value in doc_data.items() if isinstance(value, bool)}
+
+        if not updated_fields:
+            return jsonify({"message": "No boolean fields found to update"}), 200
+
+        # Update Firestore document
+        doc_ref.update(updated_fields)
+
+        return jsonify({"message": f"Updated document {doc_id}", "updated_fields": updated_fields}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+@app.route('/update_gpu', methods=['POST'])
+def update_gpu():
+    try:
+        # Get doc_id (Hardcoded for now)
+        doc_id = "8jT18xrSIjJVVeGKSrR3"
+
+        # Get new boolean value from request
+        data = request.get_json()
+        new_value = data.get("value")  # Expected: true/false
+
+        if new_value is None:
+            return jsonify({"error": "Missing 'value' parameter"}), 400
+
+        # Get the document reference
+        doc_ref = db.collection("indication").document(doc_id)
+        doc = doc_ref.get()
+
+        if not doc.exists:
+            return jsonify({"error": f"Document with ID '{doc_id}' not found"}), 404
+
+        # Get document data
+        doc_data = doc.to_dict()
+
+        # Update only boolean fields
+        updated_fields = {gpu: new_value for gpu, value in doc_data.items() if isinstance(value, bool)}
+
+        if not updated_fields:
+            return jsonify({"message": "No boolean fields found to update"}), 200
+
+        # Update Firestore document
+        doc_ref.update(updated_fields)
+
+        return jsonify({"message": f"Updated document {doc_id}", "updated_fields": updated_fields}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
