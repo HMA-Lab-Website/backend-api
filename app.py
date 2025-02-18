@@ -1,9 +1,23 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from config import db
+import cloudinary
+import cloudinary.uploader
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend requests
+
+# 🔹 Cloudinary Configuration
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET")
+)
 
 COLLECTIONS = ["publications", "projects", "datasets", "resources", "people", "alumni", "news"]
 
@@ -71,6 +85,26 @@ def delete_item(collection, doc_id):
 
         doc_ref.delete()
         return jsonify({"message": f"Document {doc_id} deleted successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/upload_image', methods=['POST'])
+def upload_image():
+    try:
+        # Get image from request
+        file = request.files['image']
+
+        # Upload image to Cloudinary
+        result = cloudinary.uploader.upload(file)
+
+        # Get the Cloudinary URL
+        image_url = result["secure_url"]
+
+        # Store image URL in Firestore (optional)
+        doc_ref = db.collection("images").add({"image_url": image_url})
+
+        return jsonify({"image_url": image_url, "doc_id": doc_ref[1].id}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
