@@ -184,7 +184,68 @@ def update_gpu():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
 
+@app.route('/check_password', methods=['POST'])
+def check_password():
+    try:
+        # Get doc_id (Hardcoded for now)
+        doc_id = "zY0XBZXIRAFTLNjbY7Rz"
+
+        # Get new boolean value from request
+        data = request.get_json()
+        new_value = data.get("pin")  # Expected: true/false
+
+        if new_value is None:
+            return jsonify({"error": "Missing 'value' parameter"}), 400
+
+        # Get the document reference
+        doc_ref = db.collection("indication").document(doc_id)
+        doc = doc_ref.get()
+
+        if not doc.exists:
+            return jsonify({"error": f"Document with ID '{doc_id}' not found"}), 404
+
+        # Get document data
+        doc_data = doc.to_dict()
+        if(doc_data["password"] == new_value):
+            bol = True
+        
+        else:
+            bol = False
+
+        return jsonify({"message": bol}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/update_password', methods=['POST'])
+def update_password():
+    try:
+        # Hardcoded document ID
+        doc_id = "zY0XBZXIRAFTLNjbY7Rz"
+
+        # Get new password from request
+        data = request.get_json()
+        new_value = data.get("value")  # Expected to be a new password
+
+        if not new_value:
+            return jsonify({"error": "Missing 'value' parameter"}), 400
+
+        # Reference to the Firestore document
+        doc_ref = db.collection("indication").document(doc_id)
+
+        # Check if document exists
+        if not doc_ref.get().exists:
+            return jsonify({"error": f"Document with ID '{doc_id}' not found"}), 404
+
+        # Update the password field in Firestore
+        doc_ref.update({"password": new_value})
+
+        return jsonify({"message": f"Password updated successfully for document {doc_id}"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
