@@ -19,7 +19,7 @@ cloudinary.config(
     api_secret=os.getenv("CLOUDINARY_API_SECRET")
 )
 
-COLLECTIONS = ["publications", "projects", "datasets", "resources", "people", "alumni", "news","indication"]
+COLLECTIONS = ["publications", "projects", "datasets", "resources", "people", "alumni", "news","indication","career"]
 
 @app.route('/add_item', methods=['POST'])
 def add_item():
